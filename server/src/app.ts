@@ -24,7 +24,22 @@ app.use(async (_req, _res, next) => {
 // Base middleware
 app.use(
   cors({
-    origin: env.CORS_ORIGIN === "*" ? true : env.CORS_ORIGIN.split(",").map((o) => o.trim()),
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      const allowedList = env.CORS_ORIGIN.split(",").map((o) => o.trim());
+      if (
+        env.CORS_ORIGIN === "*" ||
+        origin.endsWith(".vercel.app") ||
+        origin.includes("localhost") ||
+        allowedList.includes(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      callback(null, true);
+    },
     credentials: true,
   })
 );

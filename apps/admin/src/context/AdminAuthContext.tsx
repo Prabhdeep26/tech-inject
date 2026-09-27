@@ -43,6 +43,11 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const res = await apiClient.post<any>('/admin/login', { email, password });
       const data = res.data;
 
+      const token = data?.data?.token || data?.token;
+      if (token && typeof localStorage !== 'undefined') {
+        localStorage.setItem('tech_inject_admin_token', token);
+      }
+
       const adminUser =
         data?.data?.admin ||
         data?.admin ||
@@ -60,6 +65,9 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch {
       // Ignore network errors on logout
     } finally {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('tech_inject_admin_token');
+      }
       setAdmin(null);
     }
   };

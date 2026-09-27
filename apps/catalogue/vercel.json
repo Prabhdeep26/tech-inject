@@ -1,6 +1,18 @@
 {
   "rewrites": [
     {
+      "source": "/components/:match*",
+      "destination": "https://tech-inject-server.vercel.app/components/:match*"
+    },
+    {
+      "source": "/auth/:match*",
+      "destination": "https://tech-inject-server.vercel.app/auth/:match*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://tech-inject-server.vercel.app/health"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

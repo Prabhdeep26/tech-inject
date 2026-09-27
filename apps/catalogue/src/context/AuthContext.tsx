@@ -57,8 +57,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await apiClient.post('/auth/logout');
     } catch (e) {
       console.error('Logout error', e);
+    } finally {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('tech_inject_auth_token');
+      }
+      setUser(null);
     }
-    setUser(null);
   };
 
   return (

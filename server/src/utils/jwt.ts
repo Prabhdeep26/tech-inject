@@ -16,7 +16,7 @@ export const CUSTOMER_COOKIE_NAME = "tech_inject_auth_token";
 const getCookieOptions = (): CookieOptions => ({
   httpOnly: true,
   secure: env.NODE_ENV === "production",
-  sameSite: env.NODE_ENV === "production" ? "strict" : "lax",
+  sameSite: env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: "/",
 });
@@ -40,7 +40,7 @@ export function clearAuthCookie(res: Response, name: string): void {
   res.clearCookie(name, {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
-    sameSite: env.NODE_ENV === "production" ? "strict" : "lax",
+    sameSite: env.NODE_ENV === "production" ? "none" : "lax",
     path: "/",
   });
 }

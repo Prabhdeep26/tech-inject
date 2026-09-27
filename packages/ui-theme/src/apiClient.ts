@@ -83,6 +83,16 @@ export async function apiFetch<T = any>(
   }
 
   const defaultHeaders: Record<string, string> = {};
+
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    const adminToken = localStorage.getItem('tech_inject_admin_token');
+    const userToken = localStorage.getItem('tech_inject_auth_token');
+    const token = adminToken || userToken;
+    if (token) {
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   let body = customConfig.body;
 
   if (data !== undefined) {

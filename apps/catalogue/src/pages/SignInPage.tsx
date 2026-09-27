@@ -23,6 +23,11 @@ export const SignInPage: React.FC = () => {
       const res = await apiClient.post<any>('/auth/login', { email, password });
       const data = res.data;
 
+      const token = data?.data?.token || data?.token;
+      if (token && typeof localStorage !== 'undefined') {
+        localStorage.setItem('tech_inject_auth_token', token);
+      }
+
       const u = data?.data?.user || data?.user;
       if (u) {
         login({
