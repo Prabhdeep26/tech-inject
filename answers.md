@@ -1,0 +1,34 @@
+# Technical Implementation & Architecture Q&A
+
+### 1. Reference Analysis
+We identified reusable primitives by inspecting [https://sales-crm-kargulstudio.vercel.app/](https://sales-crm-kargulstudio.vercel.app/) with our browser subagent and extracting distinct UI patterns (`win-probability-meter`, `activity-sparkline-bar`, `crm-filter-toolbar`, `probability-range-slider`, `crm-detail-drawer`, `crm-activity-feed`, `crm-pipeline-table`), mapping CRM colors to our `@tech-inject/ui-theme` tokens (`#00B562` primary, `#182026` surface, `#263238` border). We deliberately set the component boundary to isolate visual presentation from business domain logic; for example, `WinProbabilityMeter` accepts a raw `value: number` and renders 10 color-graded segments rather than coupling to CRM pipeline entities. We considered importing full CRM state stores, but chose pure props-driven presentation to ensure immediate drop-in reusability in any consumer application. We verified our recreation by seeding all seven components into MongoDB GridFS via `server/src/db/seed-sales-crm.ts` and rendering them in `packages/ui-theme/src/LiveComponentPreview.tsx` side-by-side with browser visual inspection.
+
+---
+
+### 2. Architecture & Clean Code
+We chose a Turborepo monorepo architecture separating the Express API (`server`), Vite customer catalogue (`apps/catalogue`), Vite admin panel (`apps/admin`), and shared packages (`@tech-inject/types`, `@tech-inject/ui-theme`, `@tech-inject/installer`). For SOLID/DRY, shared TypeScript definitions in `packages/types` serve as the single source of truth for Mongoose models, API JSON envelopes (`{ status, data }`), and React frontends, preventing schema drift across packages. Under KISS/YAGNI, we avoided heavy runtime browser sandboxes (such as WebContainers or iframe compilers), opting instead for native React 19 interactive previews with real DOM props controls directly inside `packages/ui-theme/src/LiveComponentPreview.tsx`. We also rejected complex global state managers (Redux/Zustand) in favor of lightweight React Context with secure `httpOnly` cookie auth in `apps/catalogue/src/context/AuthContext.tsx`.
+
+---
+
+### 3. Publishing Consistency
+Publishing consistency is enforced via a compound unique index on `{ slug: 1, version: 1 }` in `server/src/models/ComponentBundle.ts` and atomic GridFS storage before metadata commitment in MongoDB. The catalogue's `apps/catalogue/src/pages/ComponentDetailPage.tsx` fetches `/components/:slug/source` once and shares that exact bundle payload across Preview, Props, Copy Code, Copy Install, and Copy Agent Prompt tabs. If an update fails during file staging or validation, the database write aborts, leaving the prior published version active and untouched. When a component is unpublished (`status !== 'published'`), the public `/components` API filters it out with a 404, while historical bundle archives remain safely preserved in GridFS to prevent breaking existing consumer installations.
+
+---
+
+### 4. Security
+Previewing and distributing external components presents risks of Stored XSS in preview tabs, administrative privilege escalation, and directory traversal during file extraction. We implemented strict `httpOnly`, `sameSite: 'lax'`, `secure` JWT session cookies (`CUSTOMER_COOKIE_NAME` and `ADMIN_COOKIE_NAME`) to prevent token exfiltration, added path-traversal sanitization in bundle installers, and reinforced `PATCH /auth/me` in `server/src/routes/auth.ts` with an explicit 403 rejection if customers attempt to modify their own `isPremium` or `isAdmin` fields. Furthermore, `apps/catalogue/src/components/CodeBlock.tsx` was refactored to isolate highlighted lines into secure table elements instead of unfiltered HTML injection. Currently, catalogue previews render curated React nodes directly in the virtual DOM; true untrusted third-party user uploads in the future will require an isolated iframe with `sandbox="allow-scripts"` to prevent parent DOM access.
+
+---
+
+### 5. AI Ownership
+We challenged two critical AI assumptions during development: first, an AI regex highlighter in `CodeBlock.tsx` that injected broken `600;` literals into CSS strings and generated 14 empty trailing lines, which we replaced with line-by-line whitespace normalization; second, a generic fallback in `LiveComponentPreview.tsx` that displayed a non-functional dummy button for components like `search-input`, which we replaced with fully interactive live React components (with real debounced search dropdowns and clear buttons). To verify that copied code and installer commands work in consumer projects rather than just within our catalogue wrapper, we verified that each bundle stored in GridFS is completely self-contained with standard React imports (`import React from 'react'`), standard CSS styles, and no circular dependencies on `@tech-inject/catalogue` internals. We confirmed this by testing bundle extraction and compiling consumers using `tsc && vite build` with zero errors.
+
+---
+
+### 6. Production Ownership
+We confirmed readiness through automated Playwright end-to-end tests and browser subagent flows validating registration, sign-in, responsive desktop/mobile navigation, interactive preview controls, and full production bundle builds (`tsc && vite build` passing with exit code 0 across all workspaces). If a newly published component breaks in production, we would immediately inspect server logs in `server/src/middleware/errorHandler.ts` and client console exceptions to identify whether the issue stems from a malformed prop or GridFS bundle corruption. Service would be instantly restored without data loss by setting the component's `status: 'draft'` or rolling back the `version` pointer on `server/src/models/Component.ts` in MongoDB, keeping all historical GridFS files intact. We would then communicate the affected component slug, the active rollback version, and an incident timeline to the team via our communication channel.
+
+---
+
+### 7. Premium Access
+Account access is strictly separated from component publishing: `server/src/models/User.ts` stores discrete `isPremium` and `isAdmin` flags, while components declare an independent `accessLevel: 'free' | 'premium'`. When a free or revoked user navigates to a premium component, `apps/catalogue/src/pages/ComponentDetailPage.tsx` displays a locked enterprise card hiding the source code, while the server endpoint `/components/:slug/source` returns a strict 403 Forbidden with `lockReason`. CLI and AI agent integrations authenticate via session cookies and are equally rejected with 403 on premium endpoints. However, revocation cannot remotely delete or un-install source code that a customer previously downloaded or committed into their private git repositories; revocation solely terminates future bundle updates, re-downloads, API requests, and live agent synchronization.

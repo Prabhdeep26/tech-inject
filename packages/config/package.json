@@ -1,0 +1,16 @@
+{
+  "name": "@tech-inject/config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'No build step for config'",
+    "lint": "echo 'Linting config'",
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'No tests for config'"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}
