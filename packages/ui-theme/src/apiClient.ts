@@ -47,10 +47,26 @@ export async function apiFetch<T = any>(
 ): Promise<ApiResponse<T>> {
   const { data, params, headers, ...customConfig } = options;
 
-  const apiBase =
-    typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL
-      ? String((import.meta as any).env.VITE_API_URL).replace(/\/+$/, '')
-      : '';
+  let envApiBase = '';
+  try {
+    const meta = (new Function('try { return import.meta; } catch(e) { return undefined; }'))();
+    if (meta && meta.env && meta.env.VITE_API_URL) {
+      envApiBase = String(meta.env.VITE_API_URL).replace(/\/+$/, '');
+    }
+  } catch {
+    // fallback if evaluation is disallowed
+  }
+
+  if (!envApiBase && typeof process !== 'undefined' && process.env?.VITE_API_URL) {
+    envApiBase = String(process.env.VITE_API_URL).replace(/\/+$/, '');
+  }
+
+  const isProductionVercel =
+    typeof window !== 'undefined' &&
+    window.location.hostname.endsWith('vercel.app') &&
+    !window.location.hostname.includes('server');
+
+  const apiBase = envApiBase || (isProductionVercel ? 'https://tech-inject-server.vercel.app' : '');
 
   let requestUrl = url.startsWith('/') && apiBase ? `${apiBase}${url}` : url;
   if (params) {

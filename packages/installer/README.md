@@ -47,7 +47,7 @@ From the root of `my-consumer-app`, run the `@tech-inject/installer` CLI using `
 npx @tech-inject/installer action-button
 
 # Specifying a custom destination folder and API URL:
-npx @tech-inject/installer action-button ./src/components/ui --api-url https://api.tech-inject.dev
+npx @tech-inject/installer action-button ./src/components/ui --api-url https://tech-inject-server.vercel.app
 ```
 
 #### For Protected / Premium Components:
@@ -56,7 +56,7 @@ Pass your API session token via `--token` or the `TECH_INJECT_TOKEN` environment
 ```bash
 # Option A: Passing token via flag
 npx @tech-inject/installer pro-data-grid ./src/components/ui \
-  --api-url https://api.tech-inject.dev \
+  --api-url https://tech-inject-server.vercel.app \
   --token <YOUR_CUSTOMER_TOKEN>
 
 # Option B: Setting the environment variable
