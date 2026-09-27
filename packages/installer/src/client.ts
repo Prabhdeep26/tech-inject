@@ -24,7 +24,7 @@ export async function fetchComponentBundle(
     options.apiUrl ||
     process.env.TECH_INJECT_API_URL ||
     process.env.API_URL ||
-    'http://localhost:3000';
+    'https://tech-inject-server.vercel.app';
 
   const baseUrl = rawBaseUrl.replace(/\/+$/, '');
 

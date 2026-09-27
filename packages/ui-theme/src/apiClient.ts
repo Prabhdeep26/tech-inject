@@ -47,7 +47,12 @@ export async function apiFetch<T = any>(
 ): Promise<ApiResponse<T>> {
   const { data, params, headers, ...customConfig } = options;
 
-  let requestUrl = url;
+  const apiBase =
+    typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL
+      ? String((import.meta as any).env.VITE_API_URL).replace(/\/+$/, '')
+      : '';
+
+  let requestUrl = url.startsWith('/') && apiBase ? `${apiBase}${url}` : url;
   if (params) {
     const searchParams = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
