@@ -7,8 +7,19 @@ import { authRouter } from "./routes/auth.js";
 import { adminRouter } from "./routes/admin.js";
 import { componentsRouter } from "./routes/components.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { connectDB } from "./db/mongoose.js";
 
 export const app = express();
+
+// Ensure DB connection for serverless invocations (e.g. Vercel)
+app.use(async (_req, _res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Base middleware
 app.use(
