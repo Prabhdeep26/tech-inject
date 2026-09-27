@@ -1,4 +1,7 @@
-export { app } from "./app.js";
+import express from "express";
+import { app } from "./app.js";
+
+export { express, app };
 export { env } from "./config/env.js";
 export { connectDB, disconnectDB } from "./db/mongoose.js";
 export { AppError, errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
@@ -28,3 +31,5 @@ export function getServerStatus(): ServerStatus {
     updatedAt: new Date().toISOString()
   };
 }
+
+export default app;
