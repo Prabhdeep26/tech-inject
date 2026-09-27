@@ -121,7 +121,7 @@ async function handleBundleUpload(req: Request, res: Response, next: NextFunctio
         status: "error",
         statusCode: 400,
         message: "Invalid component bundle payload.",
-        errors: validation.errors,
+        errors: "errors" in validation ? (validation.errors as string[]) : [],
       });
       return;
     }
@@ -219,7 +219,7 @@ async function handleComponentValidate(req: Request, res: Response, next: NextFu
           status: "error",
           statusCode: 400,
           message: "Invalid component bundle specification.",
-          errors: validation.errors,
+          errors: "errors" in validation ? (validation.errors as string[]) : [],
         });
         return;
       }

@@ -213,11 +213,13 @@ export type ValidatedComponentBundle = z.infer<typeof componentBundleSchema>;
 export interface ValidationSuccess {
   isValid: true;
   data: ValidatedComponentBundle;
+  errors?: never;
 }
 
 export interface ValidationFailure {
   isValid: false;
   errors: string[];
+  data?: never;
 }
 
 export type ValidationResult = ValidationSuccess | ValidationFailure;
